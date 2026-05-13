@@ -367,44 +367,16 @@ function resetSetup() {
 async function fetchSlides() {
   const token = store.get('sgs_token');
   const dbId  = store.get('sgs_dbid');
-  const url   = `https://api.notion.com/v1/databases/${dbId}/query`;
-  const body  = JSON.stringify({
-    filter: { property: '표시', checkbox: { equals: true } },
-    sorts:  [{ property: '순서', direction: 'ascending' }]
+
+  const WORKER = 'https://notion-proxy.dongju1240.workers.dev';
+  const res = await fetch(`${WORKER}?db=${dbId}`, {
+    method: 'GET',
+    headers: { 'x-notion-token': token }
   });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
 
-  /* CORS 우회: allorigins 프록시 사용 */
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-  const res = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Notion-Version': '2022-06-28',
-      'Content-Type': 'application/json',
-      'x-method': 'POST',
-      'x-body': body
-    }
-  });
-
-  /* allorigins 안 되면 직접 시도 */
-  let data;
-  if (!res.ok) {
-    const res2 = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json'
-      },
-      body
-    });
-    if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
-    data = await res2.json();
-  } else {
-    data = await res.json();
-  }
-
-  return (data.results || []).map(page => {
+    return (data.results || []).map(page => {
     const p = page.properties;
     return {
       id:       page.id,
