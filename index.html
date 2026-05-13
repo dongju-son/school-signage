@@ -380,7 +380,7 @@ async function fetchSlides() {
     const p = page.properties;
     return {
       id:       page.id,
-      title:    p['제목']?.title?.[0]?.plain_text || '(제목 없음)',
+      title:    p['제목']?.title?.[0]?.plain_text || '',
       content:  p['내용']?.rich_text?.[0]?.plain_text || '',
       imageUrl: p['이미지URL']?.url || null,
       bgColor:  p['배경색']?.select?.name || 'default',
@@ -401,8 +401,8 @@ function renderSlides(data) {
     div.className = `slide bg-${s.bgColor}`;
     div.innerHTML = `
       ${s.imageUrl ? `<img class="slide-image" src="${s.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
-      <div class="slide-label">생극중학교 공지</div>
-      <div class="slide-title">${s.title}</div>
+      ${!s.imageUrl ? '<div class="slide-label">생극중학교 공지</div>' : ''}
+      ${s.title ? `<div class="slide-title">${s.title}</div>` : ''}
       ${s.content ? `<div class="slide-content">${s.content}</div>` : ''}
     `;
     wrap.insertBefore(div, $('progress-bar'));
