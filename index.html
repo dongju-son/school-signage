@@ -292,7 +292,7 @@
   <div class="setup-badge">초기 설정 1/2</div>
   <h2>노션 API 토큰</h2>
   <p>notion.so → 설정 → <strong>내 연동</strong> → <strong>새 연동 만들기</strong>에서<br>Internal Integration Token을 발급해 입력하세요.</p>
-  <input type="password" id="token-field" placeholder="secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+  <input type="password" id="token-field" placeholder="ntn_xxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
   <button class="btn-primary" onclick="saveToken()">다음 →</button>
   <p style="font-size:0.78rem;opacity:0.35;">토큰은 이 기기 브라우저에만 저장됩니다</p>
 </div>
@@ -345,7 +345,7 @@ const store = {
 /* ── 설정 화면 ── */
 function saveToken() {
   const val = $('token-field').value.trim();
-  if (!val.startsWith('secret_')) { alert('토큰은 secret_ 으로 시작해야 합니다.'); return; }
+  if (!val.startsWith('secret_') && !val.startsWith('ntn_')) { alert('토큰 형식을 확인해주세요.'); return; }
   store.set('sgs_token', val);
   $('screen-token').classList.remove('show');
   $('screen-db').classList.add('show');
