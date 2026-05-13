@@ -296,6 +296,37 @@
   #overlay p { opacity: 0.55; font-size: 0.95rem; }
   #overlay h3 { font-size: 1.3rem; font-weight: 700; }
   #overlay .error-detail { font-size: 0.85rem; opacity: 0.45; max-width: 420px; text-align: center; line-height: 1.6; }
+
+  /* ── 화살표 버튼 ── */
+  #nav-arrows {
+    position: absolute;
+    bottom: 74px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+    z-index: 15;
+  }
+  .nav-btn {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(0,0,0,0.35);
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    backdrop-filter: blur(6px);
+  }
+  .nav-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.8);
+    transform: scale(1.1);
+  }
+  .nav-btn:active { transform: scale(0.95); }
 </style>
 </head>
 <body>
@@ -332,6 +363,12 @@
     </div>
   </div>
   <div id="progress-bar"></div>
+</div>
+
+<!-- 수동 이동 화살표 -->
+<div id="nav-arrows">
+  <button class="nav-btn" onclick="prevSlide()">&#8592;</button>
+  <button class="nav-btn" onclick="nextSlide()">&#8594;</button>
 </div>
 
 <!-- 하단 상태바 -->
@@ -528,6 +565,16 @@ function showError(title, detail) {
   $('overlay-detail').style.display = 'block';
   $('overlay-detail').textContent = detail;
   $('overlay-btns').style.display = 'flex';
+}
+
+/* ── 수동 이동 ── */
+function prevSlide() {
+  clearTimeout(slideTimer);
+  showSlide(currentIdx - 1);
+}
+function nextSlide() {
+  clearTimeout(slideTimer);
+  showSlide(currentIdx + 1);
 }
 
 /* ── 시계 ── */
