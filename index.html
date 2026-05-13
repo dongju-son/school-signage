@@ -435,24 +435,58 @@ function animateProgress() {
   }));
 }
 
+/* ── 급식 슬라이드 생성 ── */
+async function fetchMealSlide() {
+  const WORKER = 'https://notion-proxy.dongju1240.workers.dev';
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+  const ymd = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const res = await fetch(`${WORKER}/meal?ymd=${ymd}`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (!data.items || data.items.length === 0) return null;
+
+  const dateStr = `${now.getMonth()+1}월 ${now.getDate()}일 오늘의 급식`;
+  const menuText = data.items.join('\n');
+  const kcalStr = data.kcal ? `\n\n열량: ${data.kcal} kcal` : '';
+
+  return {
+    id: 'meal',
+    title: '🍱 ' + dateStr,
+    content: menuText + kcalStr,
+    imageUrl: data.imgUrl || null,
+    bgColor: '초록',
+    isMeal: true
+  };
+}
+
 /* ── 앱 시작 ── */
 async function startApp() {
   $('overlay').classList.remove('hidden');
   $('spinner').style.display = 'block';
   $('overlay-msg').style.display = 'block';
-  $('overlay-msg').textContent = '노션에서 공지사항을 불러오는 중...';
+  $('overlay-msg').textContent = '공지사항을 불러오는 중...';
   $('overlay-title').style.display = 'none';
   $('overlay-detail').style.display = 'none';
   $('overlay-btns').style.display = 'none';
 
   try {
-    const data = await fetchSlides();
-    if (!data.length) {
+    const [notionData, mealSlide] = await Promise.all([
+      fetchSlides(),
+      fetchMealSlide().catch(() => null)
+    ]);
+
+    let allSlides = [...notionData];
+    if (mealSlide) {
+      /* 순서 1번으로 삽입, 없으면 맨 앞 */
+      allSlides.unshift(mealSlide);
+    }
+
+    if (!allSlides.length) {
       showError('표시할 슬라이드 없음', '노션 데이터베이스에서 "표시" 체크박스를 켜주세요.');
       return;
     }
     $('overlay').classList.add('hidden');
-    renderSlides(data);
+    renderSlides(allSlides);
   } catch(e) {
     showError('데이터를 불러오지 못했어요', `${e.message}\n\n노션 Integration이 데이터베이스에 연결되어 있는지 확인하세요.`);
   }
@@ -460,8 +494,13 @@ async function startApp() {
   clearTimeout(refreshTimer);
   refreshTimer = setTimeout(async () => {
     try {
-      const data = await fetchSlides();
-      if (data.length) renderSlides(data);
+      const [notionData, mealSlide] = await Promise.all([
+        fetchSlides(),
+        fetchMealSlide().catch(() => null)
+      ]);
+      let allSlides = [...notionData];
+      if (mealSlide) allSlides.unshift(mealSlide);
+      if (allSlides.length) renderSlides(allSlides);
     } catch(e) {}
     startApp();
   }, REFRESH_INTERVAL);
