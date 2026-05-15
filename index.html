@@ -484,9 +484,10 @@ function renderSlides(data) {
 
     if (s.youtubeUrl) {
       const videoId = extractYoutubeId(s.youtubeUrl);
+      div.setAttribute('data-videoid', videoId);
       div.innerHTML = `<iframe
-        id="yt-${i}"
-        src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&rel=0&enablejsapi=1"
+        id="yt-player-${i}"
+        src="https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
         style="width:100%;height:100%;border:none;position:absolute;inset:0;"
         allow="autoplay; encrypted-media"
         allowfullscreen>
@@ -516,13 +517,15 @@ function showSlide(idx) {
   document.querySelectorAll('.dot').forEach((el,i) => el.classList.toggle('active', i === currentIdx));
   const currentSlide = slides[currentIdx];
   if (currentSlide?.youtubeUrl) {
-    // 유튜브 슬라이드: 자동 넘김 없음 (영상 끝나면 다음으로)
+    // 유튜브 슬라이드: 영상 끝나면 자동 넘김
     clearTimeout(slideTimer);
     const bar = $('progress-bar');
     bar.style.transition = 'none';
     bar.style.width = '0%';
-    // 10분 후 강제 넘김 (안전장치)
-    slideTimer = setTimeout(() => showSlide(currentIdx + 1), 600000);
+    // 플레이어 초기화 (종료 감지)
+    setTimeout(() => initYoutubePlayer(currentIdx), 1000);
+    // 30분 후 강제 넘김 (안전장치)
+    slideTimer = setTimeout(() => showSlide(currentIdx + 1), 1800000);
   } else {
     const duration = currentSlide?.imageUrl ? SLIDE_DURATION_IMAGE : SLIDE_DURATION_TEXT;
     animateProgress(duration);
@@ -657,6 +660,37 @@ function prevSlide() {
 function nextSlide() {
   clearTimeout(slideTimer);
   showSlide(currentIdx + 1);
+}
+
+/* ── 유튜브 IFrame API ── */
+function loadYouTubeAPI() {
+  if (window.YT) return;
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+}
+loadYouTubeAPI();
+
+window.onYouTubeIframeAPIReady = function() {
+  window._ytReady = true;
+};
+
+function initYoutubePlayer(slideIdx) {
+  const iframe = document.getElementById(`yt-player-${slideIdx}`);
+  if (!iframe) return;
+  const tryInit = () => {
+    if (!window.YT || !window.YT.Player) { setTimeout(tryInit, 300); return; }
+    new YT.Player(`yt-player-${slideIdx}`, {
+      events: {
+        onStateChange: (e) => {
+          if (e.data === YT.PlayerState.ENDED) {
+            showSlide(currentIdx + 1);
+          }
+        }
+      }
+    });
+  };
+  tryInit();
 }
 
 /* ── 유튜브 ID 추출 ── */
