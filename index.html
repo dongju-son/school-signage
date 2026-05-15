@@ -389,7 +389,8 @@
 </div>
 
 <script>
-const SLIDE_DURATION = 15000;
+const SLIDE_DURATION_TEXT = 10000;  // 텍스트만: 10초
+const SLIDE_DURATION_IMAGE = 15000; // 이미지 있음: 15초
 const REFRESH_INTERVAL = 300000; // 5분
 let slides = [], currentIdx = 0, slideTimer = null, refreshTimer = null;
 
@@ -481,17 +482,18 @@ function showSlide(idx) {
   currentIdx = ((idx % slides.length) + slides.length) % slides.length;
   document.querySelectorAll('.slide').forEach((el,i) => el.classList.toggle('active', i === currentIdx));
   document.querySelectorAll('.dot').forEach((el,i) => el.classList.toggle('active', i === currentIdx));
-  animateProgress();
+  const duration = slides[currentIdx]?.imageUrl ? SLIDE_DURATION_IMAGE : SLIDE_DURATION_TEXT;
+  animateProgress(duration);
   clearTimeout(slideTimer);
-  slideTimer = setTimeout(() => showSlide(currentIdx + 1), SLIDE_DURATION);
+  slideTimer = setTimeout(() => showSlide(currentIdx + 1), duration);
 }
 
-function animateProgress() {
+function animateProgress(duration) {
   const bar = $('progress-bar');
   bar.style.transition = 'none';
   bar.style.width = '0%';
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    bar.style.transition = `width ${SLIDE_DURATION}ms linear`;
+    bar.style.transition = `width ${duration}ms linear`;
     bar.style.width = '100%';
   }));
 }
