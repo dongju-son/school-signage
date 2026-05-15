@@ -94,6 +94,19 @@
     margin: 0;
     box-shadow: none;
   }
+  .slide.text-only .slide-title {
+    font-size: clamp(2rem, 9vw, 7rem);
+    margin-bottom: clamp(0.8rem, 2vh, 2rem);
+  }
+  .slide.text-only .slide-content {
+    font-size: clamp(1.2rem, 4.5vw, 3.5rem);
+    max-width: 95vw;
+    line-height: 1.7;
+  }
+  .slide.text-only .slide-label {
+    font-size: clamp(0.7rem, 2vw, 1.3rem);
+    margin-bottom: clamp(0.5rem, 1.5vh, 1.2rem);
+  }
 
   /* 배경 테마 */
   .bg-파랑  { background: radial-gradient(ellipse at 30% 40%, #3a6aaa 0%, #1a2e50 70%); }
@@ -460,7 +473,8 @@ function renderSlides(data) {
   slides.forEach((s, i) => {
     const div = document.createElement('div');
     const imageOnly = s.imageUrl && !s.title && !s.content;
-    div.className = `slide bg-${s.bgColor}${imageOnly ? ' image-only' : ''}`;
+    const textOnly = !s.imageUrl;
+    div.className = `slide bg-${s.bgColor}${imageOnly ? ' image-only' : ''}${textOnly ? ' text-only' : ''}`;
     div.innerHTML = `
       ${s.imageUrl ? `<img class="slide-image" src="${s.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
       ${!s.imageUrl ? '<div class="slide-label">생극중학교 공지</div>' : ''}
