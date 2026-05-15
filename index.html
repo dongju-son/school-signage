@@ -326,6 +326,19 @@
     border-color: rgba(255,255,255,0.7);
   }
   .nav-btn:active { transform: scale(0.92); }
+  #refresh-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  #refresh-btn:hover { color: white; background: rgba(255,255,255,0.1); }
+  #refresh-btn.spinning { animation: spin 0.8s linear; }
 </style>
 </head>
 <body>
@@ -372,12 +385,12 @@
     <div id="slide-dots"></div>
     <button class="nav-btn" onclick="nextSlide()">&#8594;</button>
   </div>
-  <div id="clock">--:--:--</div>
+  <div style="display:flex;align-items:center;gap:8px;"><button id="refresh-btn" onclick="manualRefresh()" title="공지 새로고침">↻</button><div id="clock">--:--:--</div></div>
 </div>
 
 <script>
 const SLIDE_DURATION = 20000;
-const REFRESH_INTERVAL = 60000;
+const REFRESH_INTERVAL = 300000; // 5분
 let slides = [], currentIdx = 0, slideTimer = null, refreshTimer = null;
 
 const $ = id => document.getElementById(id);
@@ -599,6 +612,33 @@ function prevSlide() {
 function nextSlide() {
   clearTimeout(slideTimer);
   showSlide(currentIdx + 1);
+}
+
+/* ── 수동 새로고침 ── */
+async function manualRefresh() {
+  const btn = $('refresh-btn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  try {
+    const [notionData, mealSlide] = await Promise.all([
+      fetchSlides(),
+      fetchMealSlide().catch(() => null)
+    ]);
+    let allSlides = [...notionData];
+    if (mealSlide) allSlides.unshift(mealSlide);
+    if (allSlides.length) {
+      const savedIdx = currentIdx;
+      renderSlides(allSlides);
+      if (savedIdx < allSlides.length) {
+        clearTimeout(slideTimer);
+        showSlide(savedIdx);
+      }
+    }
+  } catch(e) {}
+  setTimeout(() => {
+    btn.classList.remove('spinning');
+    btn.disabled = false;
+  }, 800);
 }
 
 /* ── 시계 ── */
