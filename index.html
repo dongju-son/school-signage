@@ -548,9 +548,36 @@ async function startApp() {
       ]);
       let allSlides = [...notionData];
       if (mealSlide) allSlides.unshift(mealSlide);
-      if (allSlides.length) renderSlides(allSlides);
+      if (allSlides.length) {
+        const savedIdx = currentIdx; // 현재 위치 저장
+        renderSlides(allSlides);
+        // 슬라이드 수 범위 안이면 현재 위치 유지
+        if (savedIdx < allSlides.length) {
+          clearTimeout(slideTimer);
+          showSlide(savedIdx);
+        }
+      }
     } catch(e) {}
-    startApp();
+    // 다음 갱신 예약
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(async () => {
+      try {
+        const [notionData, mealSlide] = await Promise.all([
+          fetchSlides(),
+          fetchMealSlide().catch(() => null)
+        ]);
+        let allSlides = [...notionData];
+        if (mealSlide) allSlides.unshift(mealSlide);
+        if (allSlides.length) {
+          const savedIdx = currentIdx;
+          renderSlides(allSlides);
+          if (savedIdx < allSlides.length) {
+            clearTimeout(slideTimer);
+            showSlide(savedIdx);
+          }
+        }
+      } catch(e) {}
+    }, REFRESH_INTERVAL);
   }, REFRESH_INTERVAL);
 }
 
