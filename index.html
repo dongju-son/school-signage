@@ -103,6 +103,16 @@
     max-width: 95vw;
     line-height: 1.7;
   }
+  .slide-subtitle {
+    font-size: clamp(0.9rem, 3vw, 2rem);
+    font-weight: 500;
+    opacity: 0.75;
+    margin-bottom: clamp(0.5rem, 1.5vh, 1.2rem);
+    letter-spacing: 0.5px;
+  }
+  .slide.text-only .slide-subtitle {
+    font-size: clamp(1rem, 3.5vw, 2.2rem);
+  }
   .slide.text-only .slide-label {
     font-size: clamp(0.7rem, 2vw, 1.3rem);
     margin-bottom: clamp(0.5rem, 1.5vh, 1.2rem);
@@ -455,6 +465,7 @@ async function fetchSlides() {
     return {
       id:       page.id,
       title:    p['제목']?.title?.[0]?.plain_text || '',
+      subtitle: p['소제목']?.rich_text?.[0]?.plain_text || '',
       content:  p['내용']?.rich_text?.[0]?.plain_text || '',
       imageUrl: p['이미지URL']?.url || null,
       bgColor:  p['배경색']?.select?.name || 'default',
@@ -479,6 +490,7 @@ function renderSlides(data) {
       ${s.imageUrl ? `<img class="slide-image" src="${s.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
       ${!s.imageUrl ? '<div class="slide-label">생극중학교 공지</div>' : ''}
       ${s.title ? `<div class="slide-title">${s.title}</div>` : ''}
+      ${s.subtitle ? `<div class="slide-subtitle">${s.subtitle}</div>` : ''}
       ${s.content ? `<div class="slide-content">${s.content}</div>` : ''}
     `;
     wrap.insertBefore(div, $('progress-bar'));
