@@ -489,8 +489,8 @@ function renderSlides(data) {
     div.innerHTML = `
       ${s.imageUrl ? `<img class="slide-image" src="${s.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
       ${!s.imageUrl ? '<div class="slide-label">생극중학교 공지</div>' : ''}
-      ${s.title ? `<div class="slide-title">${s.title}</div>` : ''}
       ${s.subtitle ? `<div class="slide-subtitle">${s.subtitle}</div>` : ''}
+      ${s.title ? `<div class="slide-title">${s.title}</div>` : ''}
       ${s.content ? `<div class="slide-content">${s.content}</div>` : ''}
     `;
     wrap.insertBefore(div, $('progress-bar'));
@@ -534,13 +534,14 @@ async function fetchMealSlide() {
   const data = await res.json();
   if (!data.items || data.items.length === 0) return null;
 
-  const dateStr = `${now.getMonth()+1}월 ${now.getDate()}일 오늘의 급식`;
+  const dateStr = `${now.getMonth()+1}월 ${now.getDate()}일`;
   const menuText = data.items.join('\n');
   const kcalStr = data.kcal ? `\n\n열량: ${data.kcal} kcal` : '';
 
   return {
     id: 'meal',
-    title: '🍱 ' + dateStr,
+    title: '🍱 오늘의 급식',
+    subtitle: dateStr,
     content: menuText + kcalStr,
     imageUrl: data.imgUrl || null,
     bgColor: '초록',
