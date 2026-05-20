@@ -489,8 +489,8 @@ function renderSlides(data) {
     div.innerHTML = `
       ${s.imageUrl ? `<img class="slide-image" src="${s.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
       ${!s.imageUrl ? '<div class="slide-label">생극중학교 공지</div>' : ''}
-      ${s.subtitle ? `<div class="slide-subtitle">${s.subtitle}</div>` : ''}
       ${s.title ? `<div class="slide-title">${s.title}</div>` : ''}
+      ${s.subtitle ? `<div class="slide-subtitle">${s.subtitle}</div>` : ''}
       ${s.content ? `<div class="slide-content">${s.content}</div>` : ''}
     `;
     wrap.insertBefore(div, $('progress-bar'));
