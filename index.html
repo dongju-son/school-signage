@@ -419,9 +419,21 @@ let slides = [], currentIdx = 0, slideTimer = null, refreshTimer = null;
 
 const $ = id => document.getElementById(id);
 
-/* ── 로컬 스토리지 ── */
+/* ── 로컬 스토리지 + URL 파라미터 ── */
+const urlParams = new URLSearchParams(location.search);
 const store = {
-  get: k => { try { return localStorage.getItem(k); } catch(e) { return null; } },
+  get: k => {
+    try {
+      // URL 파라미터 우선
+      if (k === 'sgs_token' && urlParams.get('token')) return urlParams.get('token');
+      if (k === 'sgs_dbid' && urlParams.get('db')) return urlParams.get('db');
+      return localStorage.getItem(k);
+    } catch(e) {
+      if (k === 'sgs_token') return urlParams.get('token');
+      if (k === 'sgs_dbid') return urlParams.get('db');
+      return null;
+    }
+  },
   set: (k,v) => { try { localStorage.setItem(k,v); } catch(e) {} },
   del: k => { try { localStorage.removeItem(k); } catch(e) {} }
 };
