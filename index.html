@@ -23,8 +23,7 @@
   #topbar{flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;padding:clamp(18px,3.4vh,40px) clamp(22px,4.5vw,64px) 0;}
   #brand{display:flex;align-items:center;gap:clamp(10px,1.3vw,16px);}
   #brandlogos{display:flex;align-items:center;gap:clamp(8px,1vw,14px);}
-  #schoolmark{width:clamp(44px,7vh,82px);height:clamp(44px,7vh,82px);object-fit:contain;display:block;}
-  #ibmark{width:clamp(54px,8.4vh,98px);height:clamp(54px,8.4vh,98px);object-fit:contain;display:block;}
+  #schoolmark,#ibmark{width:clamp(44px,7vh,82px);height:clamp(44px,7vh,82px);object-fit:contain;display:block;}
   #brand .name-ko{font-family:var(--disp);color:var(--navy);font-size:clamp(1.3rem,3.6vw,2.6rem);line-height:1;}
   #brand .name-sub{font-size:clamp(.55rem,1.3vw,.95rem);letter-spacing:1px;color:var(--muted);margin-top:clamp(3px,.6vh,7px);}
   #clockwrap{text-align:right;line-height:1;}
@@ -72,17 +71,7 @@
 </head>
 <body>
 
-<div class="setup" id="screen-token">
-  <div class="badge">초기 설정 1/2</div>
-  <h2>노션 API 토큰</h2>
-  <p>Internal Integration Token을 입력하세요. 토큰은 이 기기 브라우저에만 저장됩니다.</p>
-  <input type="password" id="token-field" placeholder="ntn_xxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
-  <button class="btn" onclick="saveToken()">다음</button>
-</div>
-
-<div class="setup" id="screen-db">
-  <div class="badge">초기 설정 2/2</div>
-  <h2>데이터베이스 ID</h2>
+<h2>데이터베이스 ID</h2>
   <p>노션 공지 데이터베이스 URL에서 32자리 ID를 복사해 입력하세요.</p>
   <input type="text" id="db-field" placeholder="c93d77e7d5b848fab2f33cd9acb244af" autocomplete="off" />
   <button class="btn" onclick="saveDbId()">시작하기</button>
@@ -129,11 +118,6 @@
 
   let slides = [], colors = [], currentIdx = 0, slideTimer = null, refreshTimer = null, progressAnim = null;
   const $ = id => document.getElementById(id);
-  const store = {
-    get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},
-    set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},
-    del:k=>{try{localStorage.removeItem(k)}catch(e){}}
-  };
 
   const PASTEL = {파랑:'#E6EEF7', 빨강:'#FAE7E7', 노랑:'#FBF0D6', 초록:'#EAF1E4', 보라:'#EFEAF6', 회색:'#F0EEE9'};
   const CYCLE = ['#FBF3E2','#FBEBDD','#EAF1E4','#E6EEF7','#EFEAF6'];
@@ -144,21 +128,7 @@
   }
   function hideOverlay(){ $('overlay').classList.add('hidden'); }
 
-  function saveToken(){
-    const v = $('token-field').value.trim();
-    if(!v.startsWith('secret_') && !v.startsWith('ntn_')){ alert('토큰 형식을 확인해주세요.'); return; }
-    store.set('sgs_token', v);
-    $('screen-token').classList.remove('show');
-    $('screen-db').classList.add('show');
-  }
-  function saveDbId(){
-    const m = $('db-field').value.trim().replace(/-/g,'').match(/[0-9a-f]{32}/i);
-    if(!m){ alert('데이터베이스 ID를 다시 확인해주세요.'); return; }
-    store.set('sgs_dbid', m[0]);
-    $('screen-db').classList.remove('show');
-    startApp();
-  }
-  function resetSetup(){ store.del('sgs_token'); store.del('sgs_dbid'); location.reload(); }
+  function reloadPage(){ location.reload(); }
 
   async function fetchWithTimeout(url, options={}, timeout=REQUEST_TIMEOUT){
     const controller = new AbortController();
@@ -180,14 +150,7 @@
   }
 
   async function fetchSlides(){
-    const token = store.get('sgs_token'), dbId = store.get('sgs_dbid');
-    if(!token) throw new Error('노션 토큰이 없습니다.');
-    if(!dbId) throw new Error('데이터베이스 ID가 없습니다.');
-
-    const data = await fetchJson(`${WORKER}?db=${encodeURIComponent(dbId)}&t=${Date.now()}`, {
-      method:'GET',
-      headers:{'x-notion-token':token}
-    });
+    const data = await fetchJson(`${WORKER}?t=${Date.now()}`, { method:'GET' });
 
     return (data.results || []).map(p=>{
       const pr = p.properties || {};
@@ -224,7 +187,7 @@
     return [{
       id:'error',
       title:'공지사항을 불러오지 못했습니다',
-      content:`${err.message || err}\n\n확인할 것\n1. Cloudflare Worker CORS / OPTIONS 처리\n2. 노션 데이터베이스에 Integration 연결\n3. 토큰과 데이터베이스 ID\n\n화면이 멈추지 않도록 이 안내 슬라이드를 표시했습니다.`,
+      content:`${err.message || err}\n\n확인할 것\n1. Cloudflare Worker CORS / OPTIONS 처리\n2. 노션 데이터베이스에 Integration 연결\n3. Worker에 저장된 NOTION_TOKEN / DATABASE_ID\n\n화면이 멈추지 않도록 이 안내 슬라이드를 표시했습니다.`,
       bgColor:'빨강'
     }];
   }
@@ -271,7 +234,7 @@
           ${s.title ? `<div class="title">${esc(s.title)}</div>` : ''}
           ${s.content ? `<div class="content">${esc(s.content)}</div>` : ''}
           ${s.imageUrl ? `<img class="slide-img" src="${esc(s.imageUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
-          ${s.id === 'error' ? `<div class="actions" style="margin-top:22px"><button class="btn" onclick="loadAll()">다시 시도</button><button class="btn btn-ghost" onclick="resetSetup()">설정 초기화</button></div>` : ''}
+          ${s.id === 'error' ? `<div class="actions" style="margin-top:22px"><button class="btn" onclick="loadAll()">다시 시도</button><button class="btn btn-ghost" onclick="reloadPage()">새로고침</button></div>` : ''}
         </div>`;
       }
       mid.insertBefore(slide, $('progress'));
@@ -322,12 +285,10 @@
     if(e.key === 'ArrowRight') nextSlide();
     if(e.key === 'ArrowLeft') prevSlide();
     if(e.key.toLowerCase() === 'r') loadAll();
-    if(e.key.toLowerCase() === 's') resetSetup();
+    if(e.key.toLowerCase() === 's') reloadPage();
   });
 
   window.addEventListener('load', ()=>{
-    if(!store.get('sgs_token')){ hideOverlay(); $('screen-token').classList.add('show'); return; }
-    if(!store.get('sgs_dbid')){ hideOverlay(); $('screen-db').classList.add('show'); return; }
     startApp();
   });
 </script>
